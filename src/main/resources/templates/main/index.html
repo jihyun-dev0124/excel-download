@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>회원 목록</title>
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/4.5.0/css/bootstrap.min.css}">
+</head>
+
+<body class="p-4">
+
+<style>
+    .wrap{width:90%; max-width:1280px; margin: 0 auto;}
+    .btn-div{margin:50px 0 30px; text-align: right}
+    .btn-div .btn-excel-download{display:inline-block; padding:10px 15px; background:#ddd; border-radius: 3px; color:#000; text-decoration: none;}
+    nav.pagination-nav{display:flex; flex-wrap:wrap; justify-content: center;}
+</style>
+
+<div class="wrap">
+    <h2>회원 목록</h2>
+
+    <!-- 검색 영역 -->
+    <!--<form id="searchForm" class="form-inline mb-3">
+        <input type="text" name="name" placeholder="회원명" class="form-control mr-2">
+        <input type="text" name="email" placeholder="이메일" class="form-control mr-2">
+
+        <select name="status" class="form-control mr-2">
+            <option value="">전체</option>
+            <option value="ACTIVE">활성</option>
+            <option value="INACTIVE">비활성</option>
+        </select>
+
+        <button type="button" class="btn btn-primary" onclick="memberList()">검색</button>
+    </form>-->
+
+    <div class="btn-div">
+        <a href="javascript:" class="btn-excel-download">엑셀 다운로드</a>
+    </div>
+
+    <!-- 테이블 -->
+    <table class="table table-bordered">
+        <thead>
+        <tr>
+            <th>no</th>
+            <th>회원 id</th>
+            <th>회원명</th>
+            <th>핸드폰번호</th>
+            <th>이메일</th>
+            <th>상태</th>
+        </tr>
+        </thead>
+        <tbody id="memberTable"></tbody>
+    </table>
+
+    <!-- 페이징 -->
+    <nav class="pagination-nav">
+        <ul class="pagination" id="pagination"></ul>
+    </nav>
+
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    let currentPage = 0;
+
+    $(function(){
+        memberList(0);
+
+        $(".btn-excel-download").click(function(){
+            $.ajax({
+                type: "post",
+                url: "/api/excel/members",
+                dataType: "json",
+                data: {requestedBy : "jihyn"},
+                success: function(result){
+                    console.log(result);
+                    alert("다운로드 요청 완료");
+                }
+            })
+        });
+    });
+
+    function memberList(page){
+        currentPage = page;
+
+        $.ajax({
+            url: "/api/members",
+            type: "get",
+            data: "page="+page,
+            success: function (result) {
+                let html = "";
+                result.content.forEach((m, idx) => {
+                    html += `
+                        <tr>
+                            <td>${(page * result.size) + idx + 1}</td>
+                            <td>${m.username}</td>
+                            <td>${m.realName}</td>
+                            <td>${m.phone}</td>
+                            <td>${m.email}</td>
+                            <td>${m.status}</td>
+                        </tr>`;
+                });
+
+                $("#memberTable").html(html);
+                renderPagination(result);
+            }
+        });
+    }
+
+    function renderPagination(res){
+        const current = res.number;
+        const totalPages = res.totalPages;
+
+        if (!totalPages || totalPages === 0) {
+            $("#pagination").html("");
+            return;
+        }
+
+        const displaySize = 10;
+        let html = "";
+
+        const startPage = Math.floor(current / displaySize) * displaySize;
+        const endPage = Math.min(startPage + displaySize - 1, totalPages - 1);
+
+        // 맨 처음으로 이동 <<
+        html += `
+            <li class="page-item ${current === 0 ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="if (${current} !== 0) memberList(0); return false;">&laquo;</a>
+            </li>`;
+
+        // 이전 페이지 <
+        html += `
+            <li class="page-item ${current === 0 ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="if (${current} > 0) memberList(${current - 1}); return false;">&lsaquo;</a>
+            </li>`;
+
+        // 가운데 숫자 버튼들 (최대 10개)
+        for (let i = startPage; i <= endPage; i++) {
+            html += `
+                <li class="page-item ${i === current ? 'active' : ''}">
+                    <a class="page-link" href="#" onclick="memberList(${i}); return false;">${i + 1}</a>
+                </li>`;
+        }
+
+        // 다음 페이지 >
+        html += `
+            <li class="page-item ${current >= totalPages - 1 ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="if (${current} < ${totalPages - 1}) memberList(${current + 1}); return false;">&rsaquo;</a>
+            </li>`;
+
+        // 맨 끝으로 이동 >>
+        html += `
+            <li class="page-item ${current >= totalPages - 1 ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="if (${current} < ${totalPages - 1}) memberList(${totalPages - 1}); return false;">&raquo;</a>
+            </li>`;
+        
+        $("#pagination").html(html);
+    }
+</script>
