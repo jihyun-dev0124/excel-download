@@ -344,7 +344,7 @@ public class ExcelWriter implements AutoCloseable{
         try {
             flushRows();
 
-            filename = URLEncoder.encode(filename,"UTF-8").replaceAll("\\+", "%20");
+            filename = URLEncoder.encode(filename,"UTF-8").replaceAll("\\+", "%20").replaceAll("-", "").replaceAll(":", "");
             filePath += filename + ".xlsx";
 
             try(FileOutputStream fos = new FileOutputStream(filePath)){

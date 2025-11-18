@@ -3,6 +3,8 @@
 <head>
     <title>회원 목록</title>
     <link rel="stylesheet" th:href="@{/webjars/bootstrap/4.5.0/css/bootstrap.min.css}">
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" th:src="@{/js/jquery.fileDownload.js}"></script>
 </head>
 
 <body class="p-4">
@@ -10,8 +12,20 @@
 <style>
     .wrap{width:90%; max-width:1280px; margin: 0 auto;}
     .btn-div{margin:50px 0 30px; text-align: right}
-    .btn-div .btn-excel-download{display:inline-block; padding:10px 15px; background:#ddd; border-radius: 3px; color:#000; text-decoration: none;}
+    .btn-div > a{display:inline-block; padding:10px 15px; background:#ddd; border-radius: 5px; color:#000; text-decoration: none;}
     nav.pagination-nav{display:flex; flex-wrap:wrap; justify-content: center;}
+
+    .tab-div{width:100%; overflow: hidden;}
+    .tab-div .tab{display:none; width: 100%;}
+    .tab-div .tab.active{display: block;}
+    .tab-btn{display: flex; flex-wrap: wrap; margin-bottom:15px;}
+    .tab-btn a{display:block; padding:10px 25px; color:#000; border-radius: 50px; border:1px solid #ddd; margin-right:5px; text-decoration: none;}
+    .tab-btn a.active,.tab-btn a:hover{background:#232625; color: #fff; font-weight: bold;}
+
+    .progress{height: 25px !important; border-radius: 50px !important;}
+    .progress-bar{position:relative; width:100%; height:25px; border:1px solid #ddd; border-radius: 50px; overflow: hidden;}
+    .download-btn{display: none; padding: 10px 15px; line-height: 1; border:none; background: #eee; border-radius: 5px;}
+    .download-btn.active{display: inline-block;}
 </style>
 
 <div class="wrap">
@@ -32,54 +46,134 @@
     </form>-->
 
     <div class="btn-div">
-        <a href="javascript:" class="btn-excel-download">엑셀 다운로드</a>
+        <a href="javascript:" class="btn-excel-download">엑셀 다운로드 - JPA</a>
+        <a href="javascript:" class="btn-excel-download-ver2">엑셀 다운로드 - Mybatis</a>
     </div>
 
     <!-- 테이블 -->
-    <table class="table table-bordered">
-        <thead>
-        <tr>
-            <th>no</th>
-            <th>회원 id</th>
-            <th>회원명</th>
-            <th>핸드폰번호</th>
-            <th>이메일</th>
-            <th>상태</th>
-        </tr>
-        </thead>
-        <tbody id="memberTable"></tbody>
-    </table>
+    <div class="tab-btn">
+        <a href="javascript:" >회원 목록</a>
+        <a href="javascript:" class="active">다운로드 현황</a>
+    </div>
+    <div class="tab-div">
+        <div class="tab">
+            <table class="table table-bordered">
+                <thead>
+                <tr>
+                    <th>no</th>
+                    <th>회원 id</th>
+                    <th>회원명</th>
+                    <th>핸드폰번호</th>
+                    <th>이메일</th>
+                    <th>상태</th>
+                </tr>
+                </thead>
+                <tbody id="memberTable"></tbody>
+            </table>
 
-    <!-- 페이징 -->
-    <nav class="pagination-nav">
-        <ul class="pagination" id="pagination"></ul>
-    </nav>
-
+            <!-- 페이징 -->
+            <nav class="pagination-nav">
+                <ul class="pagination" id="pagination"></ul>
+            </nav>
+        </div>
+        <div class="tab active">
+            <table class="table table-bordered">
+                <colgroup>
+                    <col width="50px">
+                    <col width="*">
+                    <col width="*">
+                    <col width="400px">
+                    <col width="*">
+                    <col width="130px">
+                    <col width="*">
+                    <col width="*">
+                </colgroup>
+                <thead>
+                <tr>
+                    <th>no</th>
+                    <th>신청인</th>
+                    <th>파일명</th>
+                    <th>progress</th>
+                    <th>상태</th>
+                    <th>다운로드</th>
+                    <th>요청시간</th>
+                    <th>완료시간</th>
+                </tr>
+                </thead>
+                <tbody id="excelJobTable">
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-    let currentPage = 0;
 
+<script>
     $(function(){
         memberList(0);
+        excelJobList(0);
 
+        // 엑셀 다운로드 - JPA
         $(".btn-excel-download").click(function(){
             $.ajax({
                 type: "post",
                 url: "/api/excel/members",
                 dataType: "json",
-                data: {requestedBy : "jihyn"},
+                data: {requestedBy : "jihyun"},
                 success: function(result){
                     console.log(result);
                     alert("다운로드 요청 완료");
                 }
             })
         });
+
+        // 엑셀 다운로드 - Mybatis
+        $(".btn-excel-download-ver2").click(function(){
+            $.ajax({
+                type: "post",
+                url: "/api/excel/members/ver2",
+                dataType: "json",
+                data: {requestedBy : "jihyun"},
+                success: function(result){
+                    console.log(result);
+                    alert("다운로드 요청 완료");
+                }
+            })
+        });
+
+        $(".tab-btn a").on("click", function(){
+            if($(this).hasClass("active")) return;
+            let index = $(this).index();
+            $(this).siblings().removeClass("active").end().addClass("active");
+            $(".tab-div .tab").eq(index).addClass("active").siblings().removeClass("active");
+            if (index === 1) {
+                excelJobList(0);
+            }
+        });
+
+        $(".download-btn").on("click", function(){
+            let id = $(this).parents("tr").data("id").split("job")[1];
+
+            $.fileDownload("/api/excel/"+id+"/download", {
+                httpMethod: "get",
+                async: false,
+                successCallback: function(){
+                    console.log("다운로드 완료");
+                },
+                failCallback: function(){
+                    alert("다운로드를 실패하였습니다.");
+                }
+            })
+
+        });
     });
 
+    let memberCurrentPage = 0;
+    let excelCurrentPage = 0;
+
+    //회원 목록
     function memberList(page){
-        currentPage = page;
+        memberCurrentPage = page;
 
         $.ajax({
             url: "/api/members",
@@ -105,6 +199,7 @@
         });
     }
 
+    //회원 페이지네이션
     function renderPagination(res){
         const current = res.number;
         const totalPages = res.totalPages;
@@ -153,5 +248,93 @@
             </li>`;
         
         $("#pagination").html(html);
+    }
+
+    //엑셀 다운로드 목록
+    function excelJobList(page) {
+        excelCurrentPage = page;
+
+        let jobArrays = [];
+        $.ajax({
+            url: "/api/excel/list",
+            type: "get",
+            data: "page="+page,
+            async: false,
+            success: function (result) {
+                let html = "";
+                result.content.forEach((e, idx) => {
+                    if(e.progress < 100){
+                        jobArrays.push(e.id);
+                    }
+
+                    console.log((e.completedAt != "null"));
+                    console.log(e.completedAt != null);
+                    console.log(e.completedAt);
+
+                    html += `
+                        <tr data-id="job${e.id}">
+                            <td style="text-align: center">${(page * result.size) + idx + 1}</td>
+                            <td><input type="hidden" class="id" value="${e.id}" />${e.requestedBy}</td>
+                            <td>${e.fileName}</td>
+                            <td>
+                                <div class="progress-container">
+                                    <div class="progress-text">${e.progress}%</div>
+                                    <div class="progress"><p class="progress-bar" style="width:${e.progress}%;"></p></div>
+                                </div>
+                            </td>
+                            <td class="status">${e.status}</td>
+                            <td style="text-align: center"><button ${e.progress == 100 ? `class='download-btn active' data-path='${e.filePath}'` : "class='download-btn'"}>다운로드</button></td>
+                            <td>${e.createdAt}</td>
+                            <td class="completedAt">${e.completedAt != null ? e.completedAt : '-'}</td>
+                        </tr>`;
+                });
+
+                $("#excelJobTable").html(html);
+            }
+        });
+        
+        if (jobArrays.length > 0) {
+            jobArrays.forEach((e) => {
+                console.log("startPolling - jobId : " + e);
+                startPolling(e);
+            })
+        }
+    }
+
+    //엑셀 다운로드 상태 update
+    function startPolling(jobId) {
+        const intervalId = setInterval(function(){
+            $.ajax({
+                url: "/api/excel/jobs/"+jobId,
+                method: "get",
+                success: function(result){
+                    console.log(result);
+                    let $tr = $("#excelJobTable tr[data-id='job"+jobId+"']");
+                    $tr.find(".progress-text").text(result.progress + "%");
+                    $tr.find(".progress-bar").css("width", result.progress + "%");
+                    $tr.find(".status").text(result.status);
+
+                    if(result.completedAt != null){
+                        $tr.find(".completedAt").text(result.completedAt);
+                    }
+
+                    if(result.status === "COMPLETED"){
+                        clearInterval(intervalId);
+                        $tr.find(".download-btn").addClass("active").data("path", result.filePath);
+                    }
+
+                    if(result.status === "FAILED"){
+                        clearInterval(intervalId);
+                        $tr.find(".progress-text").text("엑셀 생성 실패: " +result.errorMessage);
+                        $tr.find(".progress").hide();
+                    }
+                },
+                error: function(e){
+                    clearInterval(intervalId);
+                    alert("진행률 조회 중 오류 발생");
+                    console.log(e);
+                }
+            });
+        }, 1000); // 1초마다 조회
     }
 </script>

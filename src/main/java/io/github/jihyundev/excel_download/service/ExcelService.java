@@ -13,5 +13,4 @@ public class ExcelService {
     public void createdMemberExcel(Long jobId){
         excelJobAsyncService.generateMemberExcel(jobId);
     }
-
 }

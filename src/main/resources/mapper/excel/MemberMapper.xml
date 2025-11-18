@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.github.jihyundev.excel_download.mapper.MemberMapper">
+    <select id="cursorAll" resultType="io.github.jihyundev.excel_download.entity.Member" resultSetType="FORWARD_ONLY" fetchSize="1000">
+        select id, username, real_name, phone, email, status
+        from tb_member
+    </select>
+
+    <select id="count" resultType="int">
+        select count(*)
+        from tb_member
+    </select>
+</mapper>

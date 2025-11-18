@@ -1,37 +1,106 @@
 package io.github.jihyundev.excel_download.controller;
 
+import io.github.jihyundev.excel_download.dto.ExcelJobDto;
 import io.github.jihyundev.excel_download.entity.ExcelJob;
 import io.github.jihyundev.excel_download.enums.ExcelJobStatus;
 import io.github.jihyundev.excel_download.repository.ExcelJobRepository;
 import io.github.jihyundev.excel_download.service.ExcelJobAsyncService;
+import io.github.jihyundev.excel_download.service.ExcelJobService;
+import io.github.jihyundev.excel_download.service.ExcelService;
+import io.github.jihyundev.excel_download.service.S3Service;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+
+@Controller
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/excel")
 public class ExcelController {
     private final ExcelJobRepository excelJobRepository;
     private final ExcelJobAsyncService excelJobAsyncService;
+    private final ExcelJobService excelJobService;
+    private final S3Service s3Service;
 
-
+    /**
+     * 회원 엑셀 다운로드 - JPA
+     * @param requestedBy
+     * @return
+     */
     @PostMapping("/members")
     public ResponseEntity<Long> requestMemberExcel(@RequestParam String requestedBy){
-        ExcelJob excelJob = ExcelJob.builder()
-                .jobType("MEMBERS")
-                .status(ExcelJobStatus.PENDING)
-                .requestedBy(requestedBy)
-                .build();
-
-        ExcelJob save = excelJobRepository.save(excelJob);
+        Long jobId = excelJobService.saveExcelJob("MEMBERS_JPA", requestedBy);
 
         // 비동기 엑셀 다운로드
-        excelJobAsyncService.generateMemberExcel(save.getId());
+        excelJobAsyncService.generateMemberExcel(jobId);
 
-        return ResponseEntity.ok(save.getId());
+        return ResponseEntity.ok(jobId);
     }
+
+    /**
+     * 회원 엑셀 다운로드 - Mybatis
+     * @param requestedBy
+     * @return
+     */
+    @PostMapping("/members/ver2")
+    public ResponseEntity<Long> requestMemberExcelByMybatis(@RequestParam String requestedBy){
+        Long jobId = excelJobService.saveExcelJob("MEMBERS_Mybatis", requestedBy);
+
+        // 비동기 엑셀 다운로드
+        excelJobAsyncService.generateMemberExcelByMybatis(jobId);
+
+        return ResponseEntity.ok(jobId);
+    }
+
+    /**
+     * 엑셀 다운로드 상태 조회
+     * @param jobId
+     * @return
+     */
+    @GetMapping("/jobs/{jobId}")
+    public ResponseEntity<ExcelJobDto> getExcelJobStatus(@PathVariable Long jobId){
+        ExcelJobDto excelJob = excelJobService.getJob(jobId);
+        return ResponseEntity.ok(excelJob);
+    }
+
+    /**
+     * 엑셀 다운로드 목록
+     * @param pageable
+     * @return
+     */
+    @GetMapping("/list")
+    public Page<ExcelJobDto> excelList(@PageableDefault(size = 20) Pageable pageable) {
+        return excelJobRepository.excelJobPagination(pageable);
+    }
+
+    @GetMapping("/{jobId}/download")
+    public ResponseEntity<byte[]> download(@PathVariable Long jobId) {
+        try {
+            ExcelJobDto job = excelJobService.getJob(jobId);
+            if(!job.getStatus().equals(ExcelJobStatus.COMPLETED)){
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "파일 생성이 완료되지 않았습니다.");
+            }
+            String key = job.getFilePath();
+            byte[] fileBytes = s3Service.downloadFile(key);
+            String fileName = job.getFileName()+".xlsx";
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(fileBytes);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, !e.getMessage().isEmpty() ? e.getMessage() :  "파일이 존재하지 않습니다.");
+        }
+    }
+
 }

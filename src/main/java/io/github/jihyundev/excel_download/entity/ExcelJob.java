@@ -35,6 +35,9 @@ public class ExcelJob {
     @Column(length = 500)
     private String filePath;
 
+    @Column(length = 100)
+    private String fileName;
+
     @Column(columnDefinition = "TEXT")
     private String errorMessage;
 
