@@ -1,8 +1,8 @@
 package io.github.jihyundev.excel_download.dto;
 
 import com.querydsl.core.annotations.QueryProjection;
-import io.github.jihyundev.excel_download.entity.ExcelJob;
-import io.github.jihyundev.excel_download.enums.ExcelJobStatus;
+import io.github.jihyundev.excel_download.domain.excel.ExcelJob;
+import io.github.jihyundev.excel_download.domain.excel.ExcelJobStatus;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

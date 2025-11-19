@@ -1,10 +1,7 @@
 package io.github.jihyundev.excel_download.dto;
 
 import com.querydsl.core.annotations.QueryProjection;
-import io.github.jihyundev.excel_download.enums.MemberStatus;
-import jakarta.persistence.Column;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
+import io.github.jihyundev.excel_download.domain.member.MemberStatus;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

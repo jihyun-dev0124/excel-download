@@ -1,4 +1,4 @@
-package io.github.jihyundev.excel_download.service;
+package io.github.jihyundev.excel_download.infra;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,7 +14,7 @@ import java.io.File;
 
 @Service
 @RequiredArgsConstructor
-public class S3Service {
+public class S3StorageClient {
     private final S3Client s3Client;
 
     @Value("${aws.s3.bucket}")

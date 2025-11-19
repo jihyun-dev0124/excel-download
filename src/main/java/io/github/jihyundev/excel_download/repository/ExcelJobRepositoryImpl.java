@@ -4,7 +4,7 @@ import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import io.github.jihyundev.excel_download.dto.ExcelJobDto;
 import io.github.jihyundev.excel_download.dto.QExcelJobDto;
-import io.github.jihyundev.excel_download.entity.ExcelJob;
+import io.github.jihyundev.excel_download.domain.excel.ExcelJob;
 import jakarta.persistence.EntityManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,7 +13,7 @@ import org.springframework.data.support.PageableExecutionUtils;
 
 import java.util.List;
 
-import static io.github.jihyundev.excel_download.entity.QExcelJob.*;
+import static io.github.jihyundev.excel_download.domain.excel.QExcelJob.*;
 
 public class ExcelJobRepositoryImpl extends QuerydslRepositorySupport implements ExcelJobRepositoryCustom {
     private final JPAQueryFactory queryFactory;

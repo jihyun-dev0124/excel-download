@@ -1,8 +1,8 @@
 package io.github.jihyundev.excel_download.service;
 
 import io.github.jihyundev.excel_download.dto.ExcelJobDto;
-import io.github.jihyundev.excel_download.entity.ExcelJob;
-import io.github.jihyundev.excel_download.enums.ExcelJobStatus;
+import io.github.jihyundev.excel_download.domain.excel.ExcelJob;
+import io.github.jihyundev.excel_download.domain.excel.ExcelJobStatus;
 import io.github.jihyundev.excel_download.repository.ExcelJobRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -11,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -19,7 +18,7 @@ import java.util.List;
 public class ExcelJobService {
     private final ExcelJobRepository excelJobRepository;
 
-    public Long saveExcelJob(String jobType, String requestedBy){
+    public ExcelJob saveExcelJob(String jobType, String requestedBy){
         ExcelJob excelJob = ExcelJob.builder()
                 .jobType(jobType)
                 .status(ExcelJobStatus.PENDING)
@@ -27,8 +26,8 @@ public class ExcelJobService {
                 .requestedBy(requestedBy)
                 .build();
 
-        ExcelJob save = excelJobRepository.save(excelJob);
-        return save.getId();
+        ExcelJob saveJob = excelJobRepository.save(excelJob);
+        return saveJob;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -59,6 +58,7 @@ public class ExcelJobService {
         job.fail(e.getMessage());
     }
 
+    @Transactional(readOnly = true)
     public ExcelJobDto getJob(Long jobId){
         ExcelJob job = excelJobRepository.findById(jobId).orElseThrow(() -> new IllegalArgumentException("job not found: " + jobId));
         return new ExcelJobDto(job);

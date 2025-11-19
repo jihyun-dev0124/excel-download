@@ -4,7 +4,7 @@ import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import io.github.jihyundev.excel_download.dto.MemberDto;
 import io.github.jihyundev.excel_download.dto.QMemberDto;
-import io.github.jihyundev.excel_download.entity.Member;
+import io.github.jihyundev.excel_download.domain.member.Member;
 import jakarta.persistence.EntityManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,7 +13,7 @@ import org.springframework.data.support.PageableExecutionUtils;
 
 import java.util.List;
 
-import static io.github.jihyundev.excel_download.entity.QMember.*;
+import static io.github.jihyundev.excel_download.domain.member.QMember.*;
 
 public class MemberRepositoryImpl extends QuerydslRepositorySupport implements MemberRepositoryCustom {
     private final JPAQueryFactory queryFactory;
@@ -25,6 +25,7 @@ public class MemberRepositoryImpl extends QuerydslRepositorySupport implements M
 
     @Override
     public Page<MemberDto> memberPagination(Pageable pageable) {
+
         List<MemberDto> content = queryFactory
                 .select(new QMemberDto(
                         member.id,

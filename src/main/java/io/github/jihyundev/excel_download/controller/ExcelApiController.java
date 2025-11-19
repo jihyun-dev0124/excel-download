@@ -1,13 +1,12 @@
 package io.github.jihyundev.excel_download.controller;
 
+import io.github.jihyundev.excel_download.domain.excel.ExcelJob;
 import io.github.jihyundev.excel_download.dto.ExcelJobDto;
-import io.github.jihyundev.excel_download.entity.ExcelJob;
-import io.github.jihyundev.excel_download.enums.ExcelJobStatus;
+import io.github.jihyundev.excel_download.domain.excel.ExcelJobStatus;
 import io.github.jihyundev.excel_download.repository.ExcelJobRepository;
 import io.github.jihyundev.excel_download.service.ExcelJobAsyncService;
 import io.github.jihyundev.excel_download.service.ExcelJobService;
-import io.github.jihyundev.excel_download.service.ExcelService;
-import io.github.jihyundev.excel_download.service.S3Service;
+import io.github.jihyundev.excel_download.infra.S3StorageClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,17 +19,15 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
-
 @Controller
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/excel")
-public class ExcelController {
+public class ExcelApiController {
     private final ExcelJobRepository excelJobRepository;
     private final ExcelJobAsyncService excelJobAsyncService;
     private final ExcelJobService excelJobService;
-    private final S3Service s3Service;
+    private final S3StorageClient s3StorageClient;
 
     /**
      * 회원 엑셀 다운로드 - JPA
@@ -39,12 +36,12 @@ public class ExcelController {
      */
     @PostMapping("/members")
     public ResponseEntity<Long> requestMemberExcel(@RequestParam String requestedBy){
-        Long jobId = excelJobService.saveExcelJob("MEMBERS_JPA", requestedBy);
+        ExcelJob job = excelJobService.saveExcelJob("MEMBERS_JPA", requestedBy);
 
         // 비동기 엑셀 다운로드
-        excelJobAsyncService.generateMemberExcel(jobId);
+        excelJobAsyncService.generateMemberExcel(job.getId());
 
-        return ResponseEntity.ok(jobId);
+        return ResponseEntity.ok(job.getId());
     }
 
     /**
@@ -54,12 +51,12 @@ public class ExcelController {
      */
     @PostMapping("/members/ver2")
     public ResponseEntity<Long> requestMemberExcelByMybatis(@RequestParam String requestedBy){
-        Long jobId = excelJobService.saveExcelJob("MEMBERS_Mybatis", requestedBy);
+        ExcelJob job = excelJobService.saveExcelJob("MEMBERS_Mybatis", requestedBy);
 
         // 비동기 엑셀 다운로드
-        excelJobAsyncService.generateMemberExcelByMybatis(jobId);
+        excelJobAsyncService.generateMemberExcelByMybatis(job.getId());
 
-        return ResponseEntity.ok(jobId);
+        return ResponseEntity.ok(job.getId());
     }
 
     /**
@@ -91,7 +88,7 @@ public class ExcelController {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "파일 생성이 완료되지 않았습니다.");
             }
             String key = job.getFilePath();
-            byte[] fileBytes = s3Service.downloadFile(key);
+            byte[] fileBytes = s3StorageClient.downloadFile(key);
             String fileName = job.getFileName()+".xlsx";
 
             return ResponseEntity.ok()

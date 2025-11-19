@@ -1,6 +1,5 @@
-package io.github.jihyundev.excel_download.entity;
+package io.github.jihyundev.excel_download.domain.excel;
 
-import io.github.jihyundev.excel_download.enums.ExcelJobStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;

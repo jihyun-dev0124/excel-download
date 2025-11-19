@@ -1,10 +1,7 @@
-package io.github.jihyundev.excel_download.entity;
+package io.github.jihyundev.excel_download.domain.member;
 
-import io.github.jihyundev.excel_download.enums.MemberStatus;
 import jakarta.persistence.*;
 import lombok.*;
-
-import java.util.HashSet;
 
 @Entity
 @Table(name = "tb_member")

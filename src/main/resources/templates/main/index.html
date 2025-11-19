@@ -121,8 +121,8 @@
                 dataType: "json",
                 data: {requestedBy : "jihyun"},
                 success: function(result){
-                    console.log(result);
                     alert("다운로드 요청 완료");
+                    excelJobList(0);
                 }
             })
         });
@@ -135,8 +135,8 @@
                 dataType: "json",
                 data: {requestedBy : "jihyun"},
                 success: function(result){
-                    console.log(result);
                     alert("다운로드 요청 완료");
+                    excelJobList(0);
                 }
             })
         });
@@ -263,13 +263,9 @@
             success: function (result) {
                 let html = "";
                 result.content.forEach((e, idx) => {
-                    if(e.progress < 100){
+                    if((e.status == "RUNNING" || e.status == "PENDING") && e.progress < 100){
                         jobArrays.push(e.id);
                     }
-
-                    console.log((e.completedAt != "null"));
-                    console.log(e.completedAt != null);
-                    console.log(e.completedAt);
 
                     html += `
                         <tr data-id="job${e.id}">
@@ -295,7 +291,6 @@
         
         if (jobArrays.length > 0) {
             jobArrays.forEach((e) => {
-                console.log("startPolling - jobId : " + e);
                 startPolling(e);
             })
         }
@@ -308,7 +303,6 @@
                 url: "/api/excel/jobs/"+jobId,
                 method: "get",
                 success: function(result){
-                    console.log(result);
                     let $tr = $("#excelJobTable tr[data-id='job"+jobId+"']");
                     $tr.find(".progress-text").text(result.progress + "%");
                     $tr.find(".progress-bar").css("width", result.progress + "%");
@@ -332,7 +326,6 @@
                 error: function(e){
                     clearInterval(intervalId);
                     alert("진행률 조회 중 오류 발생");
-                    console.log(e);
                 }
             });
         }, 1000); // 1초마다 조회

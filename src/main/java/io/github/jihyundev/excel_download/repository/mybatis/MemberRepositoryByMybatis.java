@@ -1,6 +1,6 @@
 package io.github.jihyundev.excel_download.repository.mybatis;
 
-import io.github.jihyundev.excel_download.entity.Member;
+import io.github.jihyundev.excel_download.domain.member.Member;
 import io.github.jihyundev.excel_download.mapper.MemberMapper;
 import lombok.RequiredArgsConstructor;
 import org.apache.ibatis.cursor.Cursor;
