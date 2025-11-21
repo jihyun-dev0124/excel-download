@@ -1,8 +1,8 @@
 # Cursor + SXSSF로 대용량 엑셀 다운로드 구현하기 (번외. JPA Stream + SXSSF)
 <br>
 JVM 메모리가 제한된 운영 환경에서 16만 건 이상의 회원 엑셀 다운로드 시 OutOfMemoryError(OOM)가 발생했던 문제를 해결하고자<br>
--**type1.** MyBatis와 Cursor를 사용한 스트리밍 조회 방식과 Apache POI **SXSSF**의 flushRows() 호출 최적화를 통한 엑셀 생성 방식과 <br>
--**type2.** JPA의 Stream을 통한 스트리밍 조회 방식과 Apache POI **SXSSF**의 flushRows() 호출 최적화를 통한 엑셀 생성 방식
+- type1. MyBatis와 Cursor를 사용한 스트리밍 조회 방식과 Apache POI SXSSF의 flushRows() 호출 최적화를 통한 엑셀 생성 방식과 <br>
+- type2. JPA의 Stream을 통한 스트리밍 조회 방식과 Apache POI SXSSF의 flushRows() 호출 최적화를 통한 엑셀 생성 방식
 
 - @Async 기반 비동기 작업 + 상태 테이블로 엑셀 생성 과정을 기록하고
 - S3 업로드 기반 다운로드 분리 구조로 개선한 예제 프로젝트입니다.
